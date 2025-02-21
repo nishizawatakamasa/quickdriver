@@ -17,7 +17,7 @@ quickdriverの実行には、以下の環境が必要です。
     * tqdm(バージョン4.67.1以上)
     * pyarrow(バージョン16.1.0以上)
 
-## 実装例
+## 使用例
 ```py
 from selenium import webdriver as wd
 from quickdriver import QuickDriver
@@ -147,10 +147,10 @@ d.save_row('./scrape/foo', {
     '列名3': text03,
 })
 ```
-#### 15. use_tqdm
+#### 15. progress
 urlリストの各ページに対して処理を行っていく関数の進捗状況を表示する。
 ```py
-for page_url in d.use_tqdm(page_urls, func):
+for page_url in d.progress(page_urls, func):
     d.go_to(page_url)
     func()
 ```

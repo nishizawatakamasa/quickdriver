@@ -101,7 +101,7 @@ class QuickDriver:
         self._tables[name_path].append(row)
         pd.DataFrame(self._tables[name_path]).to_parquet(f'{name_path}.parquet')
 
-    def use_tqdm(self, items: Iterable, target_func: Callable) -> tqdm:
+    def progress(self, items: Iterable, target_func: Callable) -> tqdm:
         '''繰り返し処理を行う関数の進捗状況を表示する。'''
         return tqdm.tqdm(items, desc=f'{target_func.__name__}', bar_format='{desc}  {percentage:3.0f}%  {elapsed}  {remaining}')
 
@@ -110,7 +110,7 @@ class QuickDriver:
         @functools.wraps(proc_page)
         def wrapper(page_urls: list[str]) -> list[str]:
             urls = []
-            for page_url in self.use_tqdm(page_urls, proc_page):
+            for page_url in self.progress(page_urls, proc_page):
                 self.go_to(page_url)
                 if isinstance(hrefs := proc_page(), Iterable):
                     urls.extend(hrefs)

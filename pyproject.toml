@@ -18,14 +18,12 @@ authors = [
 description = "A wrapper for Selenium WebDriver that simplifies browser automation."
 readme = "README.md"
 license = "MIT"
-license-files = ["LICEN[CS]E.*"]
 keywords = [
     "selenium"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Operating System :: OS Independent"
 ]
 
 [project.urls]

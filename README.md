@@ -1,34 +1,44 @@
 # quickdriver
 
-## 概要
-quickdriverは、Seleniumを簡単に使うためのPythonモジュールです。  
-ブラウザの自動操作、スクレイピング、データの保存などを簡単に行えます。
+## Overview - 概要
+quickdriver is a wrapper for Selenium. It simplifies browser automation, web scraping, data saving, and other tasks by providing an easy-to-use interface to WebDriver.
 
-## インストール方法
-quickdriverと、quickdriverの実行に必要な全てのPythonライブラリは、以下のコマンドでインストールできます。  
-`pip install git+https://github.com/nishizawatakamasa/quickdriver`
+quickdriverはSeleniumのラッパーです。QuickDriverを介してWebDriverを操作することで、ブラウザの自動操作、スクレイピング、データ保存などの処理を簡単に実装できます。
 
-## 必要な環境
+
+## Installation - インストール
+You can install quickdriver and all the libraries needed to run it using pip: 
+
+quickdriverとその実行に必要な全てのライブラリは以下のコマンドでインストールできます。  
+
+`pip install quickdriver`
+
+
+## Requirements - 必要条件
+To run quickdriver, you need the following environment:
+
 quickdriverの実行には、以下の環境が必要です。
-* Python3.8以上
-* ライブラリ
-    * pandas(バージョン2.2.3以上)
-    * selenium(バージョン4.27.1以上)
-    * tqdm(バージョン4.67.1以上)
-    * pyarrow(バージョン16.1.0以上)
 
-## 使用例
+* Python 3.8 or higher
+* Libraries:
+    * pandas (version 2.2.3 or higher)
+    * selenium (version 4.27.1 or higher)
+    * tqdm (version 4.67.1 or higher)
+    * pyarrow (version 16.1.0 or higher)
+
+
+## Usage Example - 使用例
 ```py
 from selenium import webdriver as wd
 from quickdriver import QuickDriver
 
 options = wd.ChromeOptions()
-options.add_argument('--incognito') # シークレットモード
-# options.add_argument('--headless=new') # ヘッドレスモード
-options.add_argument('--start-maximized') # ウィンドウ最大化
-options.add_experimental_option('prefs', {'profile.managed_default_content_settings.images': 2}) # 画像読み込み無効
-# options.add_argument(r'--user-data-dir=C:\Users\xxxx\AppData\Local\Google\Chrome\User Data') # 使用するユーザープロファイルの保存先パス
-# options.add_argument('--profile-directory=Profile xx') # 使用するユーザープロファイルのディレクトリ名
+options.add_argument('--incognito') # secret mode
+# options.add_argument('--headless=new') # headless mode
+options.add_argument('--start-maximized') # maximize a window
+options.add_experimental_option('prefs', {'profile.managed_default_content_settings.images': 2}) # Image loading disabled
+# options.add_argument(r'--user-data-dir=C:\Users\xxxx\AppData\Local\Google\Chrome\User Data') # User profile destination path
+# options.add_argument('--profile-directory=Profile xx') # User profile directory name
 
 with wd.Chrome(options=options) as driver:   
     d = QuickDriver(driver)
@@ -54,92 +64,115 @@ with wd.Chrome(options=options) as driver:
     scrape_classroom_info(each_classroom(prefectures(['https://www.foobarbaz1.jp'])))
 ```
 
-## 基本的な使い方
-### QuickDriverクラス
-quickdriverモジュールは、QuickDriverクラス1つによって構成されています。  
-QuickDriverクラスは、WebDriverのインスタンスを受け取ってSeleniumの処理をラップします。
+## Basic Usage - 基本的な使い方
+### QuickDriver Class
+The quickdriver module consists of a single class: QuickDriver. This class wraps a Selenium WebDriver instance, providing convenient methods for interacting with web pages.
+
+quickdriverモジュールは、QuickDriverクラス1つによって構成されています。QuickDriverクラスは、WebDriverのインスタンスを受け取ってSeleniumの処理をラップします。
 ```py
 d = QuickDriver(driver)
 ```
 
-### QuickDriverクラスのメソッド
-QuickDriverクラスは、以下のインスタンスメソッド16個によって構成されています。
+### Methods
+The QuickDriver class provides the following instance methods:
+
+QuickDriverクラスは、以下のインスタンスメソッドによって構成されています。
 
 #### 1. ss
-セレクタで複数のWeb要素をリストで取得。存在しない場合は空のリスト。  
-第二引数にWeb要素を渡すと、そのDOMサブセットからの取得となる。
+Get multiple web elements as a list using a CSS selector. Returns an empty list if no elements are found. If a WebElement is passed as the second argument, the search is performed within that element's DOM subtree.
+
+セレクタで複数のWeb要素をリストで取得します。存在しない場合は空のリストを返します。第二引数にWeb要素を渡すと、その要素のDOMサブセットからの取得となります。
 ```py
 elems = d.ss('li.item > ul > li > a')
 ```
 #### 2. s
-セレクタでWeb要素を取得。存在しない場合はNone。  
-第二引数にWeb要素を渡すと、そのDOMサブセットからの取得となる。
+Get a single web element using a CSS selector. If more than one element satisfies the condition, only the first one is returned. Returns None if no element is found. If a WebElement is passed as the second argument, the search is performed within that element's DOM subtree.
+
+セレクタでWeb要素を取得します。条件を満たす要素が複数ある場合、最初の一つだけが返されます。存在しない場合はNoneを返します。第二引数にWeb要素を渡すと、その要素のDOMサブセットからの取得となります。
 ```py
 elem = d.s('h1 .text01')
 ```
 #### 3. ss_re
-セレクタと正規表現で複数のWeb要素をリストで取得。存在しない場合は空のリスト。  
-正規表現によるWeb要素のフィルタリングにはre_filterが使われる。  
-第三引数にWeb要素を渡すと、そのDOMサブセットからの取得となる。
+Get multiple web elements as a list using a CSS selector and a regular expression to match the element's textContent. Returns an empty list if no elements are found. If a WebElement is passed as the third argument, the search is performed within that element's DOM subtree.
+
+セレクタと、textContentに対する正規表現マッチングで複数のWeb要素をリストで取得します。存在しない場合は空のリストを返します。第三引数にWeb要素を渡すと、その要素のDOMサブセットからの取得となります。
 ```py
 elems = d.ss_re('li.item > ul > li > a', r'店\s*舗')
 ```
 #### 4. s_re
-セレクタと正規表現でWeb要素を取得。存在しない場合はNone。  
-正規表現によるWeb要素のフィルタリングにはre_filterが使われる。  
-第三引数にWeb要素を渡すと、そのDOMサブセットからの取得となる。
+Get a single web element using a CSS selector and a regular expression to match the element's textContent. If more than one element satisfies the condition, only the first one is returned. Returns None if no element is found. If a WebElement is passed as the third argument, the search is performed within that element's DOM subtree.
+
+セレクタと、textContentに対する正規表現マッチングでWeb要素を取得します。条件を満たす要素が複数ある場合、最初の一つだけが返されます。存在しない場合はNoneを返します。第三引数にWeb要素を渡すと、その要素のDOMサブセットからの取得となります。
 ```py
 elem = d.s_re('table tbody tr th', r'住\s*所')
 ```
 #### 5. attr
-Web要素から任意の属性値を取得。
+Get the value of an attribute from a web element.
+
+Web要素から任意の属性値を取得します。
 ```py
 text = d.attr('textContent', elem)
 ```
 #### 6. parent
-渡されたWeb要素の親要素を取得。
+Get the parent element of a web element.
+
+渡されたWeb要素の親要素を取得します。
 ```py
 parent_elem = d.parent(elem)
 ```
 #### 7. prev_sib
-渡されたWeb要素の兄要素を取得。
+Get the previous sibling element of a web element.
+
+渡されたWeb要素の兄要素を取得します。
 ```py
 prev_elem = d.prev_sib(elem)
 ```
 #### 8. next_sib
-渡されたWeb要素の弟要素を取得。
+Get the next sibling element of a web element.
+
+渡されたWeb要素の弟要素を取得します。
 ```py
 next_elem = d.next_sib(elem)
 ```
 #### 9. add_class
-Web要素に任意のクラスを追加して目印にする。  
-これにより、Web要素のあらゆる取得条件をセレクタで表現できるようになる。
+Add a class to the specified web elements. This can be useful for targeting elements that are difficult to select using CSS selectors alone.
+
+Web要素にクラスを追加して目印にします。これにより、Web要素のあらゆる取得条件をセレクタで表現できるようになります。
 ```py
 d.add_class(elems, 'mark-001')
 ```
 #### 10. go_to
-指定したURLに遷移する。
+Navigate to the specified URL.
+
+指定したURLに遷移します。
 ```py
 d.go_to('https://foobarbaz1.com')
 ```
 #### 11. click
-指定したWeb要素のclickイベントを発生させる。  
-クリック時に新しいタブが開かれた場合は、そのタブに遷移(tab_switch=Falseで無効化)。
+Trigger the click event on a web element. If a new tab is opened, switches to the new tab (disabled with tab_switch=False).
+
+指定したWeb要素のclickイベントを発生させます。クリック時に新しいタブが開かれた場合は、そのタブに遷移します (tab_switch=False で無効化)。
 ```py
 d.click(elem)
 ```
 #### 12. switch_to
-指定したiframe要素内に制御を移す。
+Switch the driver's focus to the specified iframe element.
+
+指定したiframe要素内に制御を移します。
 ```py
 d.switch_to(iframe_elem)
 ```
 #### 13. scroll_to_view
-指定したWeb要素をスクロールして表示する。
+Scroll the page to bring the specified web element into view.
+
+指定したWeb要素をスクロールして表示します。
 ```py
 d.scroll_to_view(elem)
 ```
 #### 14. save_row
-パス指定したテーブルデータ(無い場合は作成される)に行を追加し、parquetファイルとして保存(拡張子の記述は不要)。
+Add a row to a table (creates the table if it doesn't exist) and save it as a Parquet file. The table name is determined by the provided path.
+
+パス形式の名前で指定したテーブルデータ(無い場合は作成されます)に行を追加し、Parquetファイルとして保存します (拡張子の記述は不要)。
 ```py
 d.save_row('./scrape/foo', {
     '列名1': text01,
@@ -148,19 +181,23 @@ d.save_row('./scrape/foo', {
 })
 ```
 #### 15. progress
-urlリストの各ページに対して処理を行っていく関数の進捗状況を表示する。
+Display a progress bar for a function that iterates over a list of URLs.
+
+urlリストの各ページに対して処理を行っていく関数の進捗状況を表示します。
 ```py
 for page_url in d.progress(page_urls, func):
     d.go_to(page_url)
     func()
 ```
 #### 16. crawl
-デコレータ。  
-付与された関数は、URL文字列のリストを引数として受け取るようになる。  
-URLリストを渡すと、そのURLに順番にアクセスしていき、各ページに対して関数の処理を実行するようになる。  
-関数の処理がURL文字列のリストを返す場合、それら全てを結合したリストが最終的な戻り値となる。
+Decorator. Modifies the decorated function to accept a list of URLs as input. The function will be executed for each URL, and if the function returns a list of URLs, those URLs will be added to the list of URLs to crawl.
+
+デコレータ。付与された関数は、URL文字列のリストを引数として受け取るようになります。URLリストを渡すと、そのURLに順番にアクセスしていき、各ページに対して関数の処理を実行するようになります。関数の処理がURL文字列のリストを返す場合、最終的な戻り値はそれら全てを結合したリストとなります。
 ```py
 @d.crawl
 def foo():
     # 略
 ```
+
+## License - ライセンス
+[MIT](./LICENSE)

@@ -78,6 +78,32 @@ The QuickDriver class provides the following instance methods:
 
 QuickDriverクラスは、以下のインスタンスメソッドによって構成されています。
 
+* Get element - 要素を取得
+    * [ss](#ss)
+    * [s](#s)
+    * [ss_re](#ss_re)
+    * [s_re](#s_re)
+* Get attribute value - 属性値を取得
+    * [attr](#attr)
+* Get parent/sibling element - 親、兄、弟要素を取得
+    * [parent](#parent)
+    * [prev_sib](#prev_sib)
+    * [next_sib](#next_sib)
+* Add class to element - 要素にクラスを追加
+    * [add_class](#add_class)
+* Operate Browser - ブラウザを操作
+    * [go_to](#go_to)
+    * [click](#click)
+    * [switch_to](#switch_to)
+    * [scroll_to_view](#scroll_to_view)
+* Save Data - データを保存
+    * [save_row](#save_row)
+* Show progress - 進捗を表示
+    * [progress](#progress)
+* Create crawler - クローラーを作成
+    * [crawl](#crawl)
+
+<a id="ss"></a>
 #### 1. ss
 Get multiple web elements as a list using a CSS selector. Returns an empty list if no elements are found. If a WebElement is passed as the second argument, the search is performed within that element's DOM subtree.
 
@@ -85,6 +111,7 @@ Get multiple web elements as a list using a CSS selector. Returns an empty list 
 ```py
 elems = d.ss('li.item > ul > li > a')
 ```
+<a id="s"></a>
 #### 2. s
 Get a single web element using a CSS selector. If more than one element satisfies the condition, only the first one is returned. Returns None if no element is found. If a WebElement is passed as the second argument, the search is performed within that element's DOM subtree.
 
@@ -92,6 +119,7 @@ Get a single web element using a CSS selector. If more than one element satisfie
 ```py
 elem = d.s('h1 .text01')
 ```
+<a id="ss_re"></a>
 #### 3. ss_re
 Get multiple web elements as a list using a CSS selector and a regular expression to match the element's textContent. Returns an empty list if no elements are found. If a WebElement is passed as the third argument, the search is performed within that element's DOM subtree.
 
@@ -99,6 +127,7 @@ Get multiple web elements as a list using a CSS selector and a regular expressio
 ```py
 elems = d.ss_re('li.item > ul > li > a', r'店\s*舗')
 ```
+<a id="s_re"></a>
 #### 4. s_re
 Get a single web element using a CSS selector and a regular expression to match the element's textContent. If more than one element satisfies the condition, only the first one is returned. Returns None if no element is found. If a WebElement is passed as the third argument, the search is performed within that element's DOM subtree.
 
@@ -106,6 +135,7 @@ Get a single web element using a CSS selector and a regular expression to match 
 ```py
 elem = d.s_re('table tbody tr th', r'住\s*所')
 ```
+<a id="attr"></a>
 #### 5. attr
 Get the value of an attribute from a web element.
 
@@ -113,6 +143,7 @@ Web要素から任意の属性値を取得します。
 ```py
 text = d.attr('textContent', elem)
 ```
+<a id="parent"></a>
 #### 6. parent
 Get the parent element of a web element.
 
@@ -120,6 +151,7 @@ Get the parent element of a web element.
 ```py
 parent_elem = d.parent(elem)
 ```
+<a id="prev_sib"></a>
 #### 7. prev_sib
 Get the previous sibling element of a web element.
 
@@ -127,6 +159,7 @@ Get the previous sibling element of a web element.
 ```py
 prev_elem = d.prev_sib(elem)
 ```
+<a id="next_sib"></a>
 #### 8. next_sib
 Get the next sibling element of a web element.
 
@@ -134,6 +167,7 @@ Get the next sibling element of a web element.
 ```py
 next_elem = d.next_sib(elem)
 ```
+<a id="add_class"></a>
 #### 9. add_class
 Add a class to the specified web elements. This can be useful for targeting elements that are difficult to select using CSS selectors alone.
 
@@ -141,6 +175,7 @@ Web要素にクラスを追加して目印にします。これにより、Web�
 ```py
 d.add_class(elems, 'mark-001')
 ```
+<a id="go_to"></a>
 #### 10. go_to
 Navigate to the specified URL.
 
@@ -148,6 +183,7 @@ Navigate to the specified URL.
 ```py
 d.go_to('https://foobarbaz1.com')
 ```
+<a id="click"></a>
 #### 11. click
 Trigger the click event on a web element. If a new tab is opened, switches to the new tab (disabled with tab_switch=False).
 
@@ -155,6 +191,7 @@ Trigger the click event on a web element. If a new tab is opened, switches to th
 ```py
 d.click(elem)
 ```
+<a id="switch_to"></a>
 #### 12. switch_to
 Switch the driver's focus to the specified iframe element.
 
@@ -162,6 +199,7 @@ Switch the driver's focus to the specified iframe element.
 ```py
 d.switch_to(iframe_elem)
 ```
+<a id="scroll_to_view"></a>
 #### 13. scroll_to_view
 Scroll the page to bring the specified web element into view.
 
@@ -169,6 +207,7 @@ Scroll the page to bring the specified web element into view.
 ```py
 d.scroll_to_view(elem)
 ```
+<a id="save_row"></a>
 #### 14. save_row
 Add a row to a table (creates the table if it doesn't exist) and save it as a Parquet file. The table name is determined by the provided path.
 
@@ -180,6 +219,7 @@ d.save_row('./scrape/foo', {
     '列名3': text03,
 })
 ```
+<a id="progress"></a>
 #### 15. progress
 Display a progress bar for a function that iterates over a list of URLs.
 
@@ -189,6 +229,7 @@ for page_url in d.progress(page_urls, func):
     d.go_to(page_url)
     func()
 ```
+<a id="crawl"></a>
 #### 16. crawl
 Decorator. Modifies the decorated function to accept a list of URLs as input. The function will be executed for each URL, and if the function returns a list of URLs, those URLs will be added to the list of URLs to crawl.
 

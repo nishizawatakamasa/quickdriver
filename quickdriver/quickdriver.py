@@ -3,7 +3,7 @@ import re
 import time
 import unicodedata as ud
 from collections.abc import Callable, Iterable
-from typing import Literal
+from typing import Literal, TypeAlias
 
 import pandas as pd
 import tqdm
@@ -96,23 +96,24 @@ class QuickDriver:
 
     def save_row(self, name_path: str, row: dict[str, str]) -> None:
         '''Save a row to a table with the specified name.'''
-        if name_path not in self._tables.keys():
-            self._tables[name_path] = []
-        self._tables[name_path].append(row)
+        self._tables.setdefault(name_path, []).append(row)
         pd.DataFrame(self._tables[name_path]).to_parquet(f'{name_path}.parquet')
 
     def progress(self, items: Iterable, target_func: Callable) -> tqdm:
         '''Displays a progress bar for a function performing iterations.'''
         return tqdm.tqdm(items, desc=f'{target_func.__name__}', bar_format='{desc}  {percentage:3.0f}%  {elapsed}  {remaining}')
 
-    def crawl(self, proc_page: Callable[[], Iterable[str] | None]) -> Callable[[list[str]], list[str]]:
-        '''Crawls through pages, executing proc_page on each page, concatenating all lists returned by proc_page.'''
-        @functools.wraps(proc_page)
-        def wrapper(page_urls: list[str]) -> list[str]:
+    PageProcessor: TypeAlias = Callable[[], Iterable[str] | None]
+    Crawler: TypeAlias = Callable[[list[str]], list[str]]
+
+    def crawl(self, page_processor: PageProcessor) -> Crawler:
+        '''Crawls through pages, executing page_processor on each page, concatenating all lists returned by page_processor.'''
+        @functools.wraps(page_processor)
+        def crawler(page_urls: list[str]) -> list[str]:
             urls = []
-            for page_url in self.progress(page_urls, proc_page):
+            for page_url in self.progress(page_urls, page_processor):
                 self.go_to(page_url)
-                if isinstance(hrefs := proc_page(), Iterable):
+                if isinstance(hrefs := page_processor(), Iterable):
                     urls.extend(hrefs)
             return urls
-        return wrapper
+        return crawler

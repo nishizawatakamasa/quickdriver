@@ -3,7 +3,7 @@ import re
 import time
 import unicodedata as ud
 from collections.abc import Callable, Iterable
-from typing import Literal, TypeAlias
+from typing import Literal
 
 import pandas as pd
 import tqdm
@@ -73,7 +73,7 @@ class QuickDriver:
         else:
             time.sleep(1)
 
-    def click(self, elem: WebElement, tab_switch: bool = True) -> None:
+    def click(self, elem: WebElement | None, tab_switch: bool = True) -> None:
         '''Click on a web element.'''
         if elem:
             self._driver.execute_script('arguments[0].click();', elem)
@@ -82,7 +82,7 @@ class QuickDriver:
                 self._driver.close()
                 self._driver.switch_to.window(self._driver.window_handles[-1])
 
-    def switch_to(self, iframe_elem: WebElement) -> None:
+    def switch_to(self, iframe_elem: WebElement | None) -> None:
         '''Switch to iframe.'''
         self.scroll_to_view(iframe_elem)
         if iframe_elem:
@@ -103,8 +103,8 @@ class QuickDriver:
         '''Displays a progress bar for a function performing iterations.'''
         return tqdm.tqdm(items, desc=f'{target_func.__name__}', bar_format='{desc}  {percentage:3.0f}%  {elapsed}  {remaining}')
 
-    PageProcessor: TypeAlias = Callable[[], Iterable[str] | None]
-    Crawler: TypeAlias = Callable[[list[str]], list[str]]
+    type PageProcessor = Callable[[], Iterable[str] | None]
+    type Crawler = Callable[[list[str]], list[str]]
 
     def crawl(self, page_processor: PageProcessor) -> Crawler:
         '''Crawls through pages, executing page_processor on each page, concatenating all lists returned by page_processor.'''

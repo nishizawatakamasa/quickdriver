@@ -58,7 +58,7 @@ with wd.Chrome(options=options) as driver:
             '教室名': d.attr('textContent', d.s('h1 .text01')),
             '住所': d.attr('innerText', d.s('.item .mapText')),
             '電話番号': d.attr('textContent', d.s('.item .phoneNumber')),
-            'HP': d.attr('href', d.s('a', d.next_sib(d.s_re(th, 'ホームページ')))),
+            'HP': d.attr('href', d.s('a', d.next_sib(d.s_re('th', 'ホームページ')))),
         })
     
     scrape_classroom_info(each_classroom(prefectures(['https://www.foobarbaz1.jp'])))

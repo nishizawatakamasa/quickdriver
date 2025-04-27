@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "quickdriver"
-version = "1.0.3"
+version = "1.0.4"
 dependencies = [
     "selenium >= 4.27.1",
     "pandas >= 2.2.3",

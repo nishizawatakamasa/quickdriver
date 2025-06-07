@@ -29,6 +29,8 @@ quickdriverの実行には、以下の環境が必要です。
 
 ## Usage Example - 使用例
 ```py
+import random
+
 from selenium import webdriver as wd
 from quickdriver import QuickDriver
 
@@ -43,22 +45,22 @@ options.add_experimental_option('prefs', {'profile.managed_default_content_setti
 with wd.Chrome(options=options) as driver:   
     d = QuickDriver(driver)
     
-    @d.crawl
+    @d.crawl(delay=1.25)
     def prefectures():
-        return [d.attr('href', e) for e in d.ss('li.item > ul > li > a')]
+        return (d.attr('href', e) for e in d.ss('li.item > ul > li > a'))
         
-    @d.crawl
+    @d.crawl(delay=lambda: random.choice([0, 1, 2]))
     def each_classroom():
-        return [d.attr('href', e) for e in d.ss('.school-area h4 a')]
+        return (d.attr('href', e) for e in d.ss('.school-area h4 a'))
     
-    @d.crawl
+    @d.crawl(delay=lambda: random.uniform(0, 2))
     def scrape_classroom_info():
         d.save_row('./classroom_info', {
             'URL': driver.current_url,
             '教室名': d.attr('textContent', d.s('h1 .text01')),
             '住所': d.attr('innerText', d.s('.item .mapText')),
             '電話番号': d.attr('textContent', d.s('.item .phoneNumber')),
-            'HP': d.attr('href', d.s('a', d.next_sib(d.s_re('th', 'ホームページ')))),
+            'HP': d.attr('href', d.s('a', d.next(d.s_re('th', 'ホームページ')))),
         })
     
     scrape_classroom_info(each_classroom(prefectures(['https://www.foobarbaz1.jp'])))
@@ -85,12 +87,8 @@ QuickDriverクラスは、以下のインスタンスメソッドによって構
     * [s_re](#s_re)
 * Get attribute value - 属性値を取得
     * [attr](#attr)
-* Get parent/sibling element - 親、兄、弟要素を取得
-    * [parent](#parent)
-    * [prev_sib](#prev_sib)
-    * [next_sib](#next_sib)
-* Add class to element - 要素にクラスを追加
-    * [add_class](#add_class)
+* Get next sibling element - 弟要素を取得
+    * [next](#next)
 * Operate Browser - ブラウザを操作
     * [go_to](#go_to)
     * [click](#click)
@@ -143,40 +141,16 @@ Web要素から任意の属性値を取得します。
 ```py
 text = d.attr('textContent', elem)
 ```
-<a id="parent"></a>
-#### 6. parent
-Get the parent element of a web element.
-
-渡されたWeb要素の親要素を取得します。
-```py
-parent_elem = d.parent(elem)
-```
-<a id="prev_sib"></a>
-#### 7. prev_sib
-Get the previous sibling element of a web element.
-
-渡されたWeb要素の兄要素を取得します。
-```py
-prev_elem = d.prev_sib(elem)
-```
-<a id="next_sib"></a>
-#### 8. next_sib
+<a id="next"></a>
+#### 6. next
 Get the next sibling element of a web element.
 
 渡されたWeb要素の弟要素を取得します。
 ```py
-next_elem = d.next_sib(elem)
-```
-<a id="add_class"></a>
-#### 9. add_class
-Add a class to the specified web elements. This can be useful for targeting elements that are difficult to select using CSS selectors alone.
-
-Web要素にクラスを追加して目印にします。これにより、Web要素のあらゆる取得条件をセレクタで表現できるようになります。
-```py
-d.add_class(elems, 'mark-001')
+next_elem = d.next(elem)
 ```
 <a id="go_to"></a>
-#### 10. go_to
+#### 7. go_to
 Navigate to the specified URL.
 
 指定したURLに遷移します。
@@ -184,15 +158,15 @@ Navigate to the specified URL.
 d.go_to('https://foobarbaz1.com')
 ```
 <a id="click"></a>
-#### 11. click
-Trigger the click event on a web element. If a new tab is opened, switches to the new tab (disabled with tab_switch=False).
+#### 8. click
+After removing the target attribute of the specified web element, the click event is fired.
 
-指定したWeb要素のclickイベントを発生させます。クリック時に新しいタブが開かれた場合は、そのタブに遷移します (tab_switch=False で無効化)。
+指定したWeb要素のtarget属性を削除した後、clickイベントを発生させます。
 ```py
 d.click(elem)
 ```
 <a id="switch_to"></a>
-#### 12. switch_to
+#### 9. switch_to
 Switch the driver's focus to the specified iframe element.
 
 指定したiframe要素内に制御を移します。
@@ -200,7 +174,7 @@ Switch the driver's focus to the specified iframe element.
 d.switch_to(iframe_elem)
 ```
 <a id="scroll_to_view"></a>
-#### 13. scroll_to_view
+#### 10. scroll_to_view
 Scroll the page to bring the specified web element into view.
 
 指定したWeb要素をスクロールして表示します。
@@ -208,7 +182,7 @@ Scroll the page to bring the specified web element into view.
 d.scroll_to_view(elem)
 ```
 <a id="save_row"></a>
-#### 14. save_row
+#### 11. save_row
 Add a row to a table (creates the table if it doesn't exist) and save it as a Parquet file. The table name is determined by the provided path.
 
 パス形式の名前で指定したテーブルデータ(無い場合は作成されます)に行を追加し、Parquetファイルとして保存します (拡張子の記述は不要)。
@@ -220,7 +194,7 @@ d.save_row('./scrape/foo', {
 })
 ```
 <a id="progress"></a>
-#### 15. progress
+#### 12. progress
 Display a progress bar for a function that iterates over a list of URLs.
 
 urlリストの各ページに対して処理を行っていく関数の進捗状況を表示します。
@@ -230,13 +204,17 @@ for page_url in d.progress(page_urls, func):
     func()
 ```
 <a id="crawl"></a>
-#### 16. crawl
-Decorator. Modifies the decorated function to accept a list of URLs as input. The function will be executed for each URL, and if the function returns a list of URLs, those URLs will be added to the list of URLs to crawl.
+#### 13. crawl
+Decorator. The granted function will take a list of URL strings as arguments; passing a URL list will cause the function to access the URLs in order, executing the function's processing on each page. delay is the number of seconds between requests. If the function returns a list, set, generator, etc., the final return value is a list of all of them combined.
 
-デコレータ。付与された関数は、URL文字列のリストを引数として受け取るようになります。URLリストを渡すと、そのURLに順番にアクセスしていき、各ページに対して関数の処理を実行するようになります。関数の処理がURL文字列のリストを返す場合、最終的な戻り値はそれら全てを結合したリストとなります。
+デコレータ。付与された関数は、URL文字列のリストを引数として受け取るようになります。URLリストを渡すと、そのURLに順番にアクセスしていき、各ページに対して関数の処理を実行するようになります。delayはリクエスト間隔の秒数です。関数の処理がリスト、集合、ジェネレータ等を返す場合、最終的な戻り値はそれら全てを結合したリストとなります。
 ```py
-@d.crawl
+@d.crawl(delay=1.25)
 def foo():
+    # 略
+
+@d.crawl(delay=lambda: random.uniform(0, 2))
+def bar():
     # 略
 ```
 

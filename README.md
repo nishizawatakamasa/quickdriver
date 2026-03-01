@@ -1,17 +1,21 @@
 # quickdriver
 
 ## Overview - 概要
-quickdriver is a wrapper for Selenium. It simplifies browser automation, web scraping, data saving, and other tasks by providing an easy-to-use interface to WebDriver.
+QuickDriver is a wrapper for Selenium. By controlling WebDriver through QuickDriver, you can easily implement processes such as browser automation and scraping.
 
-quickdriverはSeleniumのラッパーです。QuickDriverを介してWebDriverを操作することで、ブラウザの自動操作、スクレイピング、データ保存などの処理を簡単に実装できます。
+quickdriverはSeleniumのラッパーです。QuickDriverを介してWebDriverを操作することで、ブラウザの自動操作、スクレイピングなどの処理を簡単に実装できます。
 
 
 ## Installation - インストール
-You can install quickdriver and all the libraries needed to run it using pip: 
+You can install quickdriver and all required dependencies from PyPI:
 
-quickdriverとその実行に必要な全てのライブラリは以下のコマンドでインストールできます。  
+quickdriverとその実行に必要なライブラリは以下でインストールできます。
 
+### pip
 `pip install quickdriver`
+
+### uv (recommended)
+`uv add quickdriver`
 
 
 ## Requirements - 必要条件
@@ -21,49 +25,61 @@ quickdriverの実行には、以下の環境が必要です。
 
 * Python 3.8 or higher
 * Libraries:
-    * pandas (version 2.2.3 or higher)
     * selenium (version 4.27.1 or higher)
-    * tqdm (version 4.67.1 or higher)
-    * pyarrow (version 16.1.0 or higher)
-
 
 ## Usage Example - 使用例
 ```py
+import os
 import random
+import time
+import pandas as pd
 
 from selenium import webdriver as wd
 from quickdriver import QuickDriver
 
 options = wd.ChromeOptions()
 options.add_argument('--incognito') # secret mode
-# options.add_argument('--headless=new') # headless mode
 options.add_argument('--start-maximized') # maximize a window
 options.add_experimental_option('prefs', {'profile.managed_default_content_settings.images': 2}) # Image loading disabled
-# options.add_argument(r'--user-data-dir=C:\Users\xxxx\AppData\Local\Google\Chrome\User Data') # User profile destination path
-# options.add_argument('--profile-directory=Profile xx') # User profile directory name
+
+CSV_PATH = 'classroom_info.csv'
 
 with wd.Chrome(options=options) as driver:   
     d = QuickDriver(driver)
     
-    @d.crawl(delay=1.25)
-    def prefectures():
-        return (d.attr('href', e) for e in d.ss('li.item > ul > li > a'))
-        
-    @d.crawl(delay=lambda: random.choice([0, 1, 2]))
-    def each_classroom():
-        return (d.attr('href', e) for e in d.ss('.school-area h4 a'))
+    d.go_to('https://www.foobarbaz1.jp')
+    pref_urls =[d.attr('href', e) for e in d.ss('li.item > ul > li > a')]
     
-    @d.crawl(delay=lambda: random.uniform(0, 2))
-    def scrape_classroom_info():
-        d.save_row('./classroom_info', {
+    classroom_urls =[]
+    total = len(pref_urls)
+    for i, url in enumerate(pref_urls, 1):
+        print(f'{i}/{total} pref_urls')
+        if not d.go_to(url):
+            continue
+        time.sleep(random.uniform(1, 2))
+        links = [d.attr('href', e) for e in d.ss('.school-area h4 a')]
+        classroom_urls.extend(links)
+
+    total = len(classroom_urls)
+    for i, url in enumerate(classroom_urls, 1):
+        print(f'{i}/{total} classroom_urls')
+        if not d.go_to(url):
+            continue
+        time.sleep(random.uniform(1, 2))
+        row = {
             'URL': driver.current_url,
             '教室名': d.attr('textContent', d.s('h1 .text01')),
             '住所': d.attr('innerText', d.s('.item .mapText')),
             '電話番号': d.attr('textContent', d.s('.item .phoneNumber')),
             'HP': d.attr('href', d.s('a', d.next(d.s_re('th', 'ホームページ')))),
-        })
-    
-    scrape_classroom_info(each_classroom(prefectures(['https://www.foobarbaz1.jp'])))
+        }
+        pd.DataFrame([row]).to_csv(
+            CSV_PATH, 
+            mode='a', 
+            index=False, 
+            header=not os.path.exists(CSV_PATH),
+            encoding='utf-8-sig'
+        )
 ```
 
 ## Basic Usage - 基本的な使い方
@@ -94,12 +110,6 @@ QuickDriverクラスは、以下のインスタンスメソッドによって構
     * [click](#click)
     * [switch_to](#switch_to)
     * [scroll_to_view](#scroll_to_view)
-* Save Data - データを保存
-    * [save_row](#save_row)
-* Show progress - 進捗を表示
-    * [progress](#progress)
-* Create crawler - クローラーを作成
-    * [crawl](#crawl)
 
 <a id="ss"></a>
 #### 1. ss
@@ -180,42 +190,6 @@ Scroll the page to bring the specified web element into view.
 指定したWeb要素をスクロールして表示します。
 ```py
 d.scroll_to_view(elem)
-```
-<a id="save_row"></a>
-#### 11. save_row
-Add a row to a table (creates the table if it doesn't exist) and save it as a Parquet file. The table name is determined by the provided path.
-
-パス形式の名前で指定したテーブルデータ(無い場合は作成されます)に行を追加し、Parquetファイルとして保存します (拡張子の記述は不要)。
-```py
-d.save_row('./scrape/foo', {
-    '列名1': text01,
-    '列名2': text02,
-    '列名3': text03,
-})
-```
-<a id="progress"></a>
-#### 12. progress
-Display a progress bar for a function that iterates over a list of URLs.
-
-urlリストの各ページに対して処理を行っていく関数の進捗状況を表示します。
-```py
-for page_url in d.progress(page_urls, func):
-    d.go_to(page_url)
-    func()
-```
-<a id="crawl"></a>
-#### 13. crawl
-Decorator. The granted function will take a list of URL strings as arguments; passing a URL list will cause the function to access the URLs in order, executing the function's processing on each page. delay is the number of seconds between requests. If the function returns a list, set, generator, etc., the final return value is a list of all of them combined.
-
-デコレータ。付与された関数は、URL文字列のリストを引数として受け取るようになります。URLリストを渡すと、そのURLに順番にアクセスしていき、各ページに対して関数の処理を実行するようになります。delayはリクエスト間隔の秒数です。関数の処理がリスト、集合、ジェネレータ等を返す場合、最終的な戻り値はそれら全てを結合したリストとなります。
-```py
-@d.crawl(delay=1.25)
-def foo():
-    # 略
-
-@d.crawl(delay=lambda: random.uniform(0, 2))
-def bar():
-    # 略
 ```
 
 ## License - ライセンス
